@@ -1,8 +1,12 @@
 package ua.sumdu.java2ee.mikhailishinNikolay.transport;
 
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.*;
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.util.*;
 
 public abstract class Transport {
     protected Socket socket;
@@ -17,6 +21,10 @@ public abstract class Transport {
                 try {
                     File file = receive();
                 } catch (IOException e) {
+                    //e.printStackTrace();
+                } catch (ParserConfigurationException e) {
+                    //e.printStackTrace();
+                } catch (SAXException e) {
                     //e.printStackTrace();
                 }
             }
@@ -37,30 +45,21 @@ public abstract class Transport {
         eventLoop.start();
     }
 
-    protected File receive() throws IOException {
-        long fileSize = input.readLong();
-        String fileName = input.readUTF();
-        System.out.println("File name: " + fileName);
-        System.out.println("File size: " + fileSize + " byte\n");
+    abstract protected File receive() throws IOException, ParserConfigurationException, SAXException;
 
+    public void send(File file) throws IOException {
+        output.writeLong(file.length());
+        output.writeUTF(file.getName());
+
+        FileInputStream in = new FileInputStream(file);
         byte[] buffer = new byte[64*1024];
-        File newFile = new File(fileName);
-        FileOutputStream outF = new FileOutputStream(newFile);
-        int count, total = 0;
+        int count;
 
-        while ((count = input.read(buffer)) != -1){
-            total += count;
-            outF.write(buffer, 0, count);
-
-            if(total == fileSize){
-                break;
-            }
+        while((count = in.read(buffer)) != -1){
+            output.write(buffer, 0, count);
         }
-        outF.flush();
-        outF.close();
-
-        System.out.println("File \""+fileName+"\" has been received");
-
-        return newFile;
+        output.flush();
+        output.close();
     }
+
 }

@@ -1,5 +1,13 @@
 package ua.sumdu.java2ee.mikhailishinNikolay.transport;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.net.Socket;
 
@@ -8,20 +16,36 @@ public class ClientTransport extends Transport {
         super(socket);
     }
 
-    public void send() throws IOException {
-        File f = new File("example.xml");
+    @Override
+    protected File receive() throws IOException, ParserConfigurationException, SAXException{
+        return new File("");
+    }
 
-        output.writeLong(f.length());
-        output.writeUTF(f.getName());
+    public File createRegistrationFile(String nickname, String password) throws ParserConfigurationException, TransformerException {
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
-        FileInputStream in = new FileInputStream(f);
-        byte[] buffer = new byte[64*1024];
-        int count;
+        Document doc = docBuilder.newDocument();
+        Element operationElement = doc.createElement("operation");
+        operationElement.setAttribute("name", "registration");
+        doc.appendChild(operationElement);
 
-        while((count = in.read(buffer)) != -1){
-            output.write(buffer, 0, count);
-        }
-        output.flush();
-        output.close();
+        Element reginfoElement = doc.createElement("reginfo");
+        reginfoElement.setAttribute("nickname", nickname);
+        reginfoElement.setAttribute("password", password);
+        operationElement.appendChild(reginfoElement);
+
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        DOMSource source = new DOMSource(doc);
+        //String fileName = "transfer.xml";
+        File resultFile = new File("transfer.xml");
+
+        StreamResult result = new StreamResult(resultFile);
+        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.transform(source, result);
+
+        return resultFile;
     }
 }
