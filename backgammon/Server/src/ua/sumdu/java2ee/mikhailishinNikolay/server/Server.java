@@ -1,7 +1,9 @@
 package ua.sumdu.java2ee.mikhailishinNikolay.server;
 
+import org.xml.sax.SAXException;
 import ua.sumdu.java2ee.mikhailishinNikolay.transport.ServerTransport;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,10 +14,16 @@ public class Server {
         System.out.println("Server starts...");
         while (! Thread.interrupted()) {
             Socket clientSocket = server.accept();
-            System.out.println("Connection from "+clientSocket.getRemoteSocketAddress());
+            System.out.println("\nConnection from "+clientSocket.getRemoteSocketAddress());
 
             //waiting for event from client
-            new ServerTransport(clientSocket);
+            try {
+                new ServerTransport(clientSocket);
+            } catch (ParserConfigurationException e) {
+                //e.printStackTrace();
+            } catch (SAXException e) {
+                //e.printStackTrace();
+            }
         }
     }
 }
