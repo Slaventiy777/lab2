@@ -1,7 +1,7 @@
 package ua.sumdu.java2ee.mikhailishinNikolay.server;
 
 import org.xml.sax.SAXException;
-import ua.sumdu.java2ee.mikhailishinNikolay.transport.ServerTransport;
+import ua.sumdu.java2ee.mikhailishinNikolay.controller.ServerController;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -18,10 +18,12 @@ public class Server {
 
             //waiting for event from client
             try {
-                new ServerTransport(clientSocket);
+                new ServerController(clientSocket);
             } catch (ParserConfigurationException e) {
+                //Исправлю потом
                 //e.printStackTrace();
             } catch (SAXException e) {
+                //Исправлю потом
                 //e.printStackTrace();
             }
         }
