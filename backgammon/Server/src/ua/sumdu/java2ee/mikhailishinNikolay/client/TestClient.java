@@ -1,12 +1,10 @@
 package ua.sumdu.java2ee.mikhailishinNikolay.client;
 
 
-import ua.sumdu.java2ee.mikhailishinNikolay.transport.ClientTransport;
-import ua.sumdu.java2ee.mikhailishinNikolay.transport.Transport;
+import ua.sumdu.java2ee.mikhailishinNikolay.controller.ClientController;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -19,17 +17,15 @@ public class TestClient {
 
     public static void main(String[] args) throws IOException {
         TestClient client = new TestClient("Test client");
-        System.out.println("Connecting...");
+        System.out.println("\nConnecting...");
         Socket clientSocket = new Socket("localhost", 1024);
-        System.out.println("Registering...");
-        ClientTransport clientTransport = new ClientTransport(clientSocket);
+        ClientController clientController = new ClientController(clientSocket);
         try {
-            File regFile = clientTransport.createRegistrationFile("player2", "123");
-            clientTransport.send(regFile);
+            clientController.registerOnServer();
         } catch (ParserConfigurationException e) {
-            System.err.println("File creation error");
+            System.err.println("Registration error");
         } catch (TransformerException e) {
-            System.err.println("File creation error");
+            System.err.println("Registration error");
         }
 
 
