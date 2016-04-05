@@ -21,14 +21,12 @@ public class TestClient {
         Socket clientSocket = new Socket("localhost", 1024);
         ClientController clientController = new ClientController(clientSocket);
         try {
-            clientController.registerOnServer();
+            clientController.openMainQuestion();
         } catch (ParserConfigurationException e) {
-            System.err.println("Registration error");
+            e.printStackTrace();
         } catch (TransformerException e) {
-            System.err.println("Registration error");
+            e.printStackTrace();
         }
-
-
     }
 
 }
