@@ -4,6 +4,7 @@ import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ua.sumdu.java2ee.mikhailishinNikolay.controller.Controller;
+import ua.sumdu.java2ee.mikhailishinNikolay.server.User;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -30,9 +31,12 @@ public class MessageParser {
         doc.appendChild(registeredListElement);
 
         for (Object key : registeredList.keySet()) {
+            User user = (User) registeredList.get(key);
+
             Element userElement = doc.createElement("user");
-            userElement.setAttribute("nickname", (String)key);
-            userElement.setAttribute("password", (String)registeredList.get(key));
+            userElement.setAttribute("nickname", user.getNickname());
+            userElement.setAttribute("password", user.getPassword());
+            userElement.setAttribute("rank", String.valueOf(user.getRank()));
             registeredListElement.appendChild(userElement);
         }
 
@@ -45,9 +49,7 @@ public class MessageParser {
         transformer.transform(source, result);
     }
 
-    public static HashMap getRegistrationListFromFile(String registeredFilePath) throws ParserConfigurationException, IOException, SAXException {
-        HashMap registeredList = new LinkedHashMap<String,String>();
-
+    public static HashMap<String,User> getRegistrationListFromFile(String registeredFilePath) throws ParserConfigurationException, IOException, SAXException {
         File file = new File(registeredFilePath);
         if (!file.exists()){
             //file does not exist
@@ -72,8 +74,8 @@ public class MessageParser {
         return getRegistrationListFromDocument(document);
     }
 
-    private static HashMap getRegistrationListFromDocument(Document document){
-        HashMap regList = new LinkedHashMap<String,String>();
+    private static HashMap<String,User> getRegistrationListFromDocument(Document document){
+        HashMap<String,User> regList = new LinkedHashMap<String,User>();
 
         Node firstNode = document.getFirstChild();
 
@@ -85,11 +87,18 @@ public class MessageParser {
                 NamedNodeMap regInfoAttributes = regInfo.getAttributes();
                 Node nicknameNode = regInfoAttributes.getNamedItem("nickname");
                 String nickname = nicknameNode.getNodeValue();
+
                 Node passwordNode = regInfoAttributes.getNamedItem("password");
                 String password = passwordNode.getNodeValue();
 
+                Node rankNode = regInfoAttributes.getNamedItem("rank");
+                int rank = 2000;
+                if (rankNode != null){
+                    rank = Integer.parseInt(rankNode.getNodeValue());
+                }
+
                 if(!nickname.isEmpty()){
-                    regList.put(nickname, password);
+                    regList.put(nickname, new User(nickname, password, rank));
                 }
             }
         }
@@ -97,18 +106,18 @@ public class MessageParser {
         return regList;
     }
 
-    public static String createErrorMessage(String errorType, String errorDescription) throws ParserConfigurationException, TransformerException {
+    public static String createStatusMessage(String messageType, String statusType, String statusDescription) throws ParserConfigurationException, TransformerException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
         Document doc = docBuilder.newDocument();
         Element operationElement = doc.createElement("operation");
-        operationElement.setAttribute("name", "error");
+        operationElement.setAttribute("name", messageType);
         doc.appendChild(operationElement);
 
-        Element errorDescriptionElement = doc.createElement("error");
-        errorDescriptionElement.setAttribute("name", errorType.toString());
-        errorDescriptionElement.setAttribute("description", errorDescription);
+        Element errorDescriptionElement = doc.createElement(messageType);
+        errorDescriptionElement.setAttribute("name", statusType.toString());
+        errorDescriptionElement.setAttribute("description", statusDescription);
         operationElement.appendChild(errorDescriptionElement);
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -142,18 +151,19 @@ public class MessageParser {
         return nameOfFirstNode.getNodeValue();
     }
 
-    public static String createRegistrationMessage(String nickname, String password) throws TransformerException, ParserConfigurationException {
+    public static String createMessage(String operation, HashMap param) throws TransformerException, ParserConfigurationException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
         Document doc = docBuilder.newDocument();
         Element operationElement = doc.createElement("operation");
-        operationElement.setAttribute("name", "registration");
+        operationElement.setAttribute("name", operation);
         doc.appendChild(operationElement);
 
-        Element reginfoElement = doc.createElement("reginfo");
-        reginfoElement.setAttribute("nickname", nickname);
-        reginfoElement.setAttribute("password", password);
+        Element reginfoElement = doc.createElement("info");
+        for (Object key:param.keySet()){
+            reginfoElement.setAttribute((String)key, (String)param.get(key));
+        }
         operationElement.appendChild(reginfoElement);
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -170,7 +180,17 @@ public class MessageParser {
     }
 
     public static LinkedList<Controller.ErrorType> getErrorTypes(String message) throws ParserConfigurationException, IOException, SAXException {
-        LinkedList<Controller.ErrorType> errorTypes = new LinkedList<>();
+        LinkedList<Controller.ErrorType> errorTypes = getStatusTypesFromMessage("error", message);
+        return errorTypes;
+    }
+
+    public static LinkedList<Controller.StatusType> getStatusTypes(String message) throws ParserConfigurationException, IOException, SAXException {
+        LinkedList<Controller.StatusType> statusTypes = getStatusTypesFromMessage("status", message);
+        return statusTypes;
+    }
+
+    private static LinkedList getStatusTypesFromMessage(String messageType, String message) throws ParserConfigurationException, IOException, SAXException {
+        LinkedList statusTypes = new LinkedList();
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
@@ -190,16 +210,23 @@ public class MessageParser {
             if (regInfo.hasAttributes()) {
                 NamedNodeMap regInfoAttributes = regInfo.getAttributes();
 
-                Node errorDescriptionNode = regInfoAttributes.getNamedItem("description");
-                String errorDescription = errorDescriptionNode.getNodeValue();
-                System.err.println(errorDescription);
+                Node statusDescriptionNode = regInfoAttributes.getNamedItem("description");
+                String statusDescription = statusDescriptionNode.getNodeValue();
 
-                Node errorNameNode = regInfoAttributes.getNamedItem("name");
-                Controller.ErrorType errorType = Controller.ErrorType.valueOf(errorNameNode.getNodeValue());
-                errorTypes.add(errorType);
+                Node statusNameNode = regInfoAttributes.getNamedItem("name");
+                if (messageType.equals("error")){
+                    System.err.println(statusDescription);
+                    Controller.ErrorType errorType = Controller.ErrorType.valueOf(statusNameNode.getNodeValue());
+                    statusTypes.add(errorType);
+                }
+                else if(messageType.equals("status")){
+                    System.out.println(statusDescription);
+                    Controller.StatusType statusType = Controller.StatusType.valueOf(statusNameNode.getNodeValue());
+                    statusTypes.add(statusType);
+                }
             }
         }
 
-        return errorTypes;
+        return statusTypes;
     }
 }
