@@ -20,4 +20,5 @@ public class Checker {
     public Ellipse2D getChecker() {
         return checker;
     }
+
 }

@@ -17,6 +17,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 public class Settings {
 
@@ -33,12 +34,18 @@ public class Settings {
     private static String username = "";
     private static String password = "";
 
+    // string patterns
+    public static final Pattern USERNAME_PATTERN = Pattern.compile("^([a-zA-Z])+$");
+    public static final Pattern PASS_PATTERN = Pattern.compile("^(\\w)+$");
+
     // DBG MSG
     public static final String DBG_ReadFromXML          = "Read settings from XML file...";
     public static final String DBG_WriteToXML           = "Write settings to XML file...";
     public static final String DBG_CreatingEventLoop    = "Creating event loop...";
     public static final String DBG_StartEventLoop       = "Start event loop...";
     public static final String DBG_NULL_EVENT           = "Dispatching event: event == null";
+    public static final String DBG_InvalidPassword      = "Invalid password. Try again.";
+    public static final String DBG_InvalidUsername      = "Invalid username. Try again.";
 
     // ERR MSG
     public static final String ERR_CannotReadSettings   = "Cannot read the settings";

@@ -4,6 +4,7 @@ import com.backgammon.model.BackgammonBoardModel;
 import com.backgammon.model.Cell;
 import com.backgammon.model.Checker;
 import com.backgammon.model.Settings;
+import com.backgammon.view.AuthorizationWindow;
 import com.backgammon.view.BackgammonBoardView;
 import com.messageParser.MessageParser;
 import com.transport.ClientTransport;
@@ -29,7 +30,7 @@ import java.util.LinkedList;
 
 public class BackgammomBoardController implements MouseListener, MouseMotionListener {
 
-    private static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    //private static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     private static final Logger log = Logger.getLogger(BackgammomBoardController.class.getName());
 
     // static block, executes when class is loaded first time
@@ -56,6 +57,8 @@ public class BackgammomBoardController implements MouseListener, MouseMotionList
 
     private Transport transport;
 
+    private AuthorizationWindow authorizationWindow;
+
 //    public BackgammomBoardController(BackgammonBoardModel backgammonBoardModel, BackgammonBoardView backgammonBoardView) {
 //        this.boardModel = backgammonBoardModel;
 //        this.boardView = backgammonBoardView;
@@ -80,6 +83,41 @@ public class BackgammomBoardController implements MouseListener, MouseMotionList
                 JOptionPane.ERROR_MESSAGE);
     }
 
+    public void showAuthorizationWindow() {
+
+        if (authorizationWindow == null) {
+            //create new if it first time
+            authorizationWindow = new AuthorizationWindow(this);
+        }
+        authDialog.setDefaultUser();
+
+        if (authDialog.showDialog(null, Settings.INF_DialogTitle)) {
+            // if accepted, retrieve user input
+            log.debug("myUsername " + authDialog.getUsername() + ", pass: " + authDialog.getPassword());
+
+            myUsername = authDialog.getUsername();
+            String pass = authDialog.getPassword();
+
+            if (authDialog.getReg()) {
+                log.debug("Registration: username - " + myUsername + " pass - " + pass);
+                try {
+                    getTransport().send(new RegAuth(myUsername, pass, RegAuth.Type.Register));
+                } catch (IOException e) {
+                    showError(Settings.ERR_ConnectionErr);
+                    System.exit(0);
+                }
+            } else {
+                log.debug("Authorization: username - " + myUsername + " pass - " + pass);
+                try {
+                    getTransport().send(new RegAuth(myUsername, pass, RegAuth.Type.Authorization));
+                } catch (IOException e) {
+                    showError(Settings.ERR_ConnectionErr);
+                    System.exit(0);
+                }
+            }
+        }
+
+    }
 
 
 
