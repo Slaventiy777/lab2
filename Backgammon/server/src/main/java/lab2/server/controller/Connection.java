@@ -104,17 +104,17 @@ class Connection implements Runnable, Observer {
         }
 
 
-        /*if (event instanceof PlayRequest){
-                PlayRequest playWith = (PlayRequest) event;
-                sendPlayRequest(playWith.nick);
+        if (event instanceof MsgPlayRequest){
+            MsgPlayRequest playWith = (MsgPlayRequest) event;
+            sendPlayRequest(playWith.getNickname());
         }
 
 
 
-        if (event instanceof ShootMessage){
-            ShootMessage shoot = (ShootMessage)event;
-            setMessageInRoom(shoot);
-        }*/
+        if (event instanceof MsgMove){
+            MsgMove msgMove = (MsgMove)event;
+            setMessageInRoom(msgMove);
+        }
 
     }
 
@@ -394,6 +394,17 @@ class Connection implements Runnable, Observer {
         }
 
         log.info("Request for user [" + opponent.getNickname() + "]");
+    }
+
+    private void setMessageInRoom(MsgMove msgMove) {
+        String nick = msgMove.getPlayer();
+        User us = getUserByNick(nick);
+        long roomID = us.getRoomID();
+        for (GameRoom room : StartServer.listRoom) {
+            if (roomID == room.getID()) {
+                room.setMoveMessage(msgMove);
+            }
+        }
     }
 
     private Transport getProtocol() {
