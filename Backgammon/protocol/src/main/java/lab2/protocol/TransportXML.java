@@ -1,9 +1,6 @@
 package lab2.protocol;
 
-import lab2.protocol.envelope.Envelope;
-import lab2.protocol.envelope.Msg;
-import lab2.protocol.envelope.MsgAuth;
-import lab2.protocol.envelope.MsgReg;
+import lab2.protocol.envelope.*;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -69,6 +66,14 @@ public class TransportXML implements Transport {
             return new MsgAuth(doc);
         } else if (root.equals("Msg")) {
             return new Msg(doc);
+        } else if (root.equals("MsgListUsers")) {
+            return new MsgListUsers(doc);
+        } else if (root.equals("MsgMove")) {
+            return new MsgMove(doc);
+        } else if (root.equals("MsgNicknameException")) {
+            return new MsgNicknameException(doc);
+        } else if (root.equals("MsgPlayRequest")) {
+            return new MsgPlayRequest(doc);
         } else {
             return null;
         }
@@ -82,6 +87,14 @@ public class TransportXML implements Transport {
                 return (MsgAuth) obj;
         } else if (obj.getClass().getSimpleName().equals("Msg")) {
             return (Msg) obj;
+        } else if (obj.equals("MsgListUsers")) {
+            return new MsgListUsers(doc);
+        } else if (obj.equals("MsgMove")) {
+            return new MsgMove(doc);
+        } else if (obj.equals("MsgNicknameException")) {
+            return new MsgNicknameException(doc);
+        } else if (obj.equals("MsgPlayRequest")) {
+            return new MsgPlayRequest(doc);
         } else {
             return null;
         }

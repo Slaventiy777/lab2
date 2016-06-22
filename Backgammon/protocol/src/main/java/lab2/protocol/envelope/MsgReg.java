@@ -9,6 +9,11 @@ public class MsgReg extends Envelope {
     private String nickname;
     private String password;
 
+    public MsgReg(String nickname, String password) {
+        this.nickname = nickname;
+        this.password = password;
+    }
+
     public MsgReg(Document doc) {
         readXml(doc);
     }

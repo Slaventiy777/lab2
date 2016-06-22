@@ -1,7 +1,7 @@
 package lab2.server.controller;
 
-import lab2.server.model.Model;
-import lab2.server.model.ModelImpl;
+import lab2.server.model.PlayerModel;
+import lab2.server.model.PlayerModelImpl;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class StartServer {
     private static Connection connection;
     private static Set<Connection> connections = new HashSet<>();
 
-    private static Model userModel = new ModelImpl();
+    private static PlayerModel playerModel = new PlayerModelImpl();
     static volatile List<GameRoom> listRoom = new LinkedList<>();
     
     public static void main(String[] args) throws IOException {
@@ -32,7 +32,7 @@ public class StartServer {
             System.out.println("Start listening...");
             while (true) {
                 Socket socket = serverSocket.accept();
-                connection = new Connection(socket, userModel, connections);
+                connection = new Connection(socket, playerModel, connections);
             }
         } catch (IOException e) {
             log.error("Error process server (IOException)!");
@@ -49,7 +49,7 @@ public class StartServer {
         } catch(IOException e) {
             log.error("Error closing the socket (IOException)!", e);
         } finally {
-            userModel.storageList();
+            playerModel.storageList();
         }
 
     }

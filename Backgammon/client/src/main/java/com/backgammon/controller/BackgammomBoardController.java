@@ -6,9 +6,9 @@ import com.backgammon.model.Checker;
 import com.backgammon.model.Settings;
 import com.backgammon.view.AuthorizationWindow;
 import com.backgammon.view.BackgammonBoardView;
-import com.messageParser.MessageParser;
-import com.transport.ClientTransport;
-import com.transport.Transport;
+
+import lab2.protocol.Transport;
+import lab2.protocol.TransportXML;
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 
@@ -70,7 +70,7 @@ public class BackgammomBoardController implements MouseListener, MouseMotionList
     public BackgammomBoardController() throws IOException {
         Socket clientSocket = new Socket();
         clientSocket.connect(new InetSocketAddress(Settings.HOST, Settings.PORT), Settings.SO_TIMEOUT);
-        transport = new ClientTransport(clientSocket);
+        transport = new TransportXML(clientSocket);
     }
 
     public Transport getTransport() {

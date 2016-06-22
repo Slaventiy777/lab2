@@ -4,7 +4,7 @@ import lab2.protocol.Transport;
 import lab2.protocol.TransportXML;
 import lab2.protocol.User;
 import lab2.protocol.envelope.*;
-import lab2.server.model.Model;
+import lab2.server.model.PlayerModel;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -20,16 +20,16 @@ class Connection implements Runnable, Observer {
     private Socket socket;
     private Transport protocol;
 
-    private Model userModel;
+    private PlayerModel playerModel;
 
     private boolean newUser = true;
     private Thread threadConnection;
     private User thisUser;
     private Set<Connection> connections;
 
-    public Connection(Socket socket, Model userModel, Set<Connection> connections) throws IOException {
+    public Connection(Socket socket, PlayerModel playerModel, Set<Connection> connections) throws IOException {
 
-        this.userModel = userModel;
+        this.playerModel = playerModel;
         this.socket = socket;
         protocol = new TransportXML(socket);
 
@@ -54,7 +54,7 @@ class Connection implements Runnable, Observer {
             log.error("Error! Send 'Connect' (IOException).", e);
 
             connections.remove(this);
-            userModel.observable().deleteObserver(this);
+            playerModel.observable().deleteObserver(this);
         }
 
         log.info("Send 'Connect' from socket: " + socket.getPort());
@@ -96,20 +96,17 @@ class Connection implements Runnable, Observer {
                 exitThread();
             } else if (msg.getMessage().equals("ExitGame")) {
                 disconnectDuringGame(thisUser);
-            } else if (msg.getMessage().equals("YesBattle")) {
-                answerForRequest(new Msg("YesBattle"));
-            } else if (msg.getMessage().equals("NoBattle")) {
-                answerForRequest(new Msg("NoBattle"));
+            } else if (msg.getMessage().equals("YesGame")) {
+                answerForRequest(new Msg("YesGame"));
+            } else if (msg.getMessage().equals("NoGame")) {
+                answerForRequest(new Msg("NoGame"));
             }
         }
-
 
         if (event instanceof MsgPlayRequest){
             MsgPlayRequest playWith = (MsgPlayRequest) event;
             sendPlayRequest(playWith.getNickname());
         }
-
-
 
         if (event instanceof MsgMove){
             MsgMove msgMove = (MsgMove)event;
@@ -120,7 +117,7 @@ class Connection implements Runnable, Observer {
 
     private void registration(User user) {
 
-        Set<User> listUsers = userModel.getUsersList();
+        Set<User> listUsers = playerModel.getUsersList();
         String nickname = user.getNickname();
 
         newUser = true;
@@ -133,7 +130,7 @@ class Connection implements Runnable, Observer {
                 } catch (IOException ex) {
                     log.error("Error (IOException)! Send NickException (registration user).", ex);
                     connections.remove(this);
-                    userModel.observable().deleteObserver(this);
+                    playerModel.observable().deleteObserver(this);
                 }
 
                 log.info("User with a nickname '" + nickname + "' has already been registred.");
@@ -142,10 +139,10 @@ class Connection implements Runnable, Observer {
         }
 
         if (newUser) {
-            userModel.addUser(user, socket, false);
+            playerModel.addUser(user, socket, false);
             thisUser = user;
-            userModel.observable().addObserver(this);
-            userModel.setListChanged();
+            playerModel.observable().addObserver(this);
+            playerModel.setListChanged();
         }
 
     }
@@ -153,15 +150,15 @@ class Connection implements Runnable, Observer {
     private void authorization(User user) {
 
         newUser = true;
-        for (User tempUser : userModel.getUsersList()) {
+        for (User tempUser : playerModel.getUsersList()) {
 
             if (tempUser.equalsAuthorization(user) && tempUser.getUserStatus().equals(User.Status.Disconnected)) {
                 newUser = false;
 
-                userModel.addUser(tempUser, socket, true);
+                playerModel.addUser(tempUser, socket, true);
                 thisUser = tempUser;
-                userModel.observable().addObserver(this);
-                userModel.setListChanged();
+                playerModel.observable().addObserver(this);
+                playerModel.setListChanged();
 
                 log.info("User '" + user.toString() + "' is joined.");
 
@@ -174,7 +171,7 @@ class Connection implements Runnable, Observer {
                 } catch (IOException ex) {
                     log.error("Error (IOException)! Send NickException (authorization user).", ex);
                     connections.remove(this);
-                    userModel.observable().deleteObserver(this);
+                    playerModel.observable().deleteObserver(this);
                 }
 
                 log.info("User with the nick '" + user.toString() + "' is authorizated.");
@@ -190,7 +187,7 @@ class Connection implements Runnable, Observer {
             } catch (IOException ex) {
                 log.error("Error (IOException)! Send NickException (authorization user).", ex);
                 connections.remove(this);
-                userModel.observable().deleteObserver(this);
+                playerModel.observable().deleteObserver(this);
             }
 
             log.info("User with the nick '" + user.toString() + "' is not registred.");
@@ -201,7 +198,7 @@ class Connection implements Runnable, Observer {
     public void exitThread() {
         
         try {
-            Map<User, Socket> map = userModel.getMapActiveUsers();
+            Map<User, Socket> map = playerModel.getMapActiveUsers();
 
             if (thisUser != null) {
                 if (thisUser.getUserStatus().equals(User.Status.Plays))
@@ -215,12 +212,12 @@ class Connection implements Runnable, Observer {
 
             protocol.close();
             connections.remove(this);
-            userModel.observable().deleteObserver(this);
+            playerModel.observable().deleteObserver(this);
 
             if (!map.isEmpty())
-                userModel.setListChanged();
+                playerModel.setListChanged();
 
-            userModel.storageList();
+            playerModel.storageList();
         } catch (IOException ex) {
             log.error("Exit error (closed socket)", ex);
         }
@@ -251,7 +248,7 @@ class Connection implements Runnable, Observer {
 
     public void closeAll() {
         
-        Map<User, Socket> map = userModel.getMapActiveUsers();
+        Map<User, Socket> map = playerModel.getMapActiveUsers();
         Set<Map.Entry<User, Socket>> entries = map.entrySet();
 
         for (Map.Entry<User, Socket> entry : entries) {
@@ -262,7 +259,7 @@ class Connection implements Runnable, Observer {
                 log.error("Error! Closing socket.", ex);
             }
 
-            userModel.storageList();
+            playerModel.storageList();
         }
 
     }
@@ -286,7 +283,7 @@ class Connection implements Runnable, Observer {
     private Set<User> listWithoutMe(User user) {
 
         Set<User> withoutMe = new HashSet<>();
-        Set<User> list = userModel.getExpectingUsersList();
+        Set<User> list = playerModel.getExpectingUsersList();
         for (User tempUser : list) {
             if (!tempUser.equalsAuthorization(user))
                 withoutMe.add(tempUser);
@@ -299,7 +296,7 @@ class Connection implements Runnable, Observer {
 
         Transport transport = null;
         Socket socket = null;
-        Map<User, Socket> map = userModel.getMapActiveUsers();
+        Map<User, Socket> map = playerModel.getMapActiveUsers();
 
         if (map.containsKey(user))
             socket = map.get(user);
@@ -318,7 +315,7 @@ class Connection implements Runnable, Observer {
     private User getUserByNick(String nickname){
 
         User user = null;
-        Set<User> list = userModel.getKeySetActiveUsers();
+        Set<User> list = playerModel.getKeySetActiveUsers();
         for(User tempUser : list) {
             if(nickname.equals(tempUser.getNickname())) {
                 user = tempUser;
@@ -336,8 +333,8 @@ class Connection implements Runnable, Observer {
         User opponentUser = getUserByNick(sOpponent);
         Transport opponentProtocol = findProtocol(opponentUser);
 
-        if (obj instanceof Msg && ((Msg) obj).getMessage().equals("YesBattle")) {
-            GameRoom game = new GameRoom(thisUser, protocol, opponentUser, opponentProtocol, userModel, connections);
+        if (obj instanceof Msg && ((Msg) obj).getMessage().equals("YesGame")) {
+            GameRoom game = new GameRoom(thisUser, protocol, opponentUser, opponentProtocol, playerModel, connections);
 
             StartServer.listRoom.add(game);
 
@@ -356,7 +353,7 @@ class Connection implements Runnable, Observer {
             }
         }
 
-        userModel.setListChanged();
+        playerModel.setListChanged();
 
     }
 

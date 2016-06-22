@@ -52,12 +52,12 @@ public class MsgMove extends Envelope {
         this.secondCheckerMoveInto = secondCheckerMoveInto;
     }
 
-
-
-    private String message;
-
-    public MsgMove(String message) {
-        this.message = message;
+    public MsgMove(String player, int firstCheckerMoveFrom, int secondCheckerMoveFrom, int firstCheckerMoveInto, int secondCheckerMoveInto) {
+        this.player = player;
+        this.firstCheckerMoveFrom = firstCheckerMoveFrom;
+        this.secondCheckerMoveFrom = secondCheckerMoveFrom;
+        this.firstCheckerMoveInto = firstCheckerMoveInto;
+        this.secondCheckerMoveInto = secondCheckerMoveInto;
     }
 
     public MsgMove(Document doc) {
@@ -65,25 +65,33 @@ public class MsgMove extends Envelope {
     }
 
     public void readXml(Document doc){
-        message = GetData(doc, "Message");
+        player = GetData(doc, "player");
+        firstCheckerMoveFrom = Integer.parseInt(GetData(doc, "firstCheckerMoveFrom"));
+        secondCheckerMoveFrom = Integer.parseInt(GetData(doc, "secondCheckerMoveFrom"));
+        firstCheckerMoveInto = Integer.parseInt(GetData(doc, "firstCheckerMoveInto"));
+        secondCheckerMoveInto = Integer.parseInt(GetData(doc, "secondCheckerMoveInto"));
     }
 
     public Document writeXml(Document doc){
-        Element root = doc.createElement("Msg");
+        Element root = doc.createElement("MsgMove");
         doc.appendChild(root);
-        writeDataXml(doc, root, "Message", message);
+        writeDataXml(doc, root, "player", player);
+        writeDataXml(doc, root, "firstCheckerMoveFrom", String.valueOf(firstCheckerMoveFrom));
+        writeDataXml(doc, root, "secondCheckerMoveFrom", String.valueOf(secondCheckerMoveFrom));
+        writeDataXml(doc, root, "firstCheckerMoveInto", String.valueOf(firstCheckerMoveInto));
+        writeDataXml(doc, root, "secondCheckerMoveInto", String.valueOf(secondCheckerMoveInto));
+
         return doc;
     }
 
     public String getLogMessage(){
-        return " Send Msg '" + message + "'";
+        return " Send MsgMove '" + this.toString() + "'";
     }
 
-    public String getMessage() {
-        return message;
+    public String toString() {
+        return "player: [" + this.player + "] firstCheckerMoveFrom: [" + this.firstCheckerMoveFrom
+                + "] secondCheckerMoveFrom: [" + this.secondCheckerMoveFrom + "] firstCheckerMoveInto: ["
+                + this.firstCheckerMoveInto + "] secondCheckerMoveInto: [" + this.secondCheckerMoveInto + "]";
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
 }

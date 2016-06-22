@@ -83,20 +83,40 @@ public class BackgammonModel implements Serializable {
 
     }
 
-    public void afterDidMove(User currentUser, int firstCheckerMoveFrom, int firstCheckerMoveInto,
+    public void afterDidMove(String currentUser, int firstCheckerMoveFrom, int firstCheckerMoveInto,
                              int secondCheckerMoveFrom,  int secondCheckerMoveInto) {
 
-        log.debug("" + currentUser.getNickname() + " move [" + firstCheckerMoveFrom + "->" + firstCheckerMoveInto
+        log.debug("" + currentUser + " move [" + firstCheckerMoveFrom + "->" + firstCheckerMoveInto
                 + " " + secondCheckerMoveFrom + "->" + secondCheckerMoveInto + "]");
 
-        if (currentUser.equals(firstUser) && enableMoveFirstUser) {
+        if (currentUser.equals(firstUser.getNickname()) && enableMoveFirstUser) {
+
             enableMoveFirstUser = false;
             enableMoveSecondUser = true;
+
+            moveBetweenCell(firstCheckerMoveFrom, firstCheckerMoveInto, secondCheckerMoveFrom, secondCheckerMoveInto);
+
+            if (firstCheckerMoveInto == -1)
+                numCheckerInGameFirstUser--;
+
+            if (secondCheckerMoveInto == -1)
+                numCheckerInGameFirstUser--;
+
         }
 
-        if (currentUser.equals(secondUser) && enableMoveSecondUser) {
+        if (currentUser.equals(secondUser.getNickname()) && enableMoveSecondUser) {
+
             enableMoveFirstUser = true;
             enableMoveSecondUser = false;
+
+            moveBetweenCell(firstCheckerMoveFrom, firstCheckerMoveInto, secondCheckerMoveFrom, secondCheckerMoveInto);
+
+            if (firstCheckerMoveInto == -1)
+                numCheckerInGameSecondUser--;
+
+            if (firstCheckerMoveInto == -1)
+                numCheckerInGameSecondUser--;
+
         }
 
         if (numCheckerInGameFirstUser == 0 || numCheckerInGameSecondUser == 0) {
@@ -105,6 +125,57 @@ public class BackgammonModel implements Serializable {
 
     }
 
+    private void moveBetweenCell(int firstCheckerMoveFrom, int firstCheckerMoveInto,
+                                 int secondCheckerMoveFrom,  int secondCheckerMoveInto) {
+
+        Checker firstCheckerTemp = null;
+        Checker secondCheckerTemp = null;
+
+        int firstCellFrom = -1;
+        int firstCellInto = -1;
+        int secondCellFrom = -1;
+        int secondCellInto = -1;
+
+        int i = -1;
+        for (Cell cell : boardCells) {
+
+            i++;
+
+            if (cell.getCheckers().size() > 0 && cell.getCellNumber() == firstCheckerMoveFrom) {
+                firstCellFrom = i;
+                firstCheckerTemp = cell.getCheckers().getLast();
+            }
+
+            if (firstCheckerMoveInto != -1 && cell.getCellNumber() == firstCheckerMoveInto)
+                firstCellInto = i;
+
+            if (cell.getCheckers().size() > 0 && cell.getCellNumber() == secondCheckerMoveFrom) {
+                secondCellFrom = i;
+                secondCheckerTemp = cell.getCheckers().getLast();
+            }
+
+            if (secondCheckerMoveInto != -1 && cell.getCellNumber() == secondCheckerMoveInto)
+                secondCellInto = i;
+
+        }
+
+        if (firstCellFrom != -1)
+            if (boardCells[firstCellFrom].getCheckers().size() > 0)
+                boardCells[firstCellFrom].getCheckers().removeLast();
+
+        if (firstCellInto != -1)
+            if (firstCheckerTemp != null)
+                boardCells[firstCellInto].getCheckers().add(firstCheckerTemp);
+
+        if (secondCellFrom != -1)
+            if (boardCells[secondCellFrom].getCheckers().size() > 0)
+                boardCells[secondCellFrom].getCheckers().removeLast();
+
+        if (secondCellInto != -1)
+            if (secondCheckerTemp != null)
+                boardCells[secondCellInto].getCheckers().add(secondCheckerTemp);
+
+    }
 
     public User getFirstUser() {
         return firstUser;

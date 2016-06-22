@@ -23,7 +23,7 @@ import java.util.Set;
 
 public class ParserXmlFile {
 
-    private static final Logger log = Logger.getLogger(lab2.server.model.ModelImpl.class);
+    private static final Logger log = Logger.getLogger(PlayerModelImpl.class);
 
     public static void writeToXML(Set<User> users, File file) throws Exception {
 

@@ -5,7 +5,7 @@ import lab2.protocol.User;
 import lab2.protocol.envelope.Msg;
 import lab2.protocol.envelope.MsgMove;
 import lab2.protocol.model.BackgammonModel;
-import lab2.server.model.Model;
+import lab2.server.model.PlayerModel;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -21,14 +21,14 @@ public class GameRoom implements Runnable {
     Set<Connection> connections;
     BackgammonModel backgammonModel;
 
-    private Model userModel;
+    private PlayerModel playerModel;
     private Thread thread;
 
     private MsgMove msgMove = null;
 
 
-    public GameRoom(User player1, Transport protocol1, User player2, Transport protocol2, Model userModel, Set<Connection> connections) {
-        this.userModel = userModel;
+    public GameRoom(User player1, Transport protocol1, User player2, Transport protocol2, PlayerModel playerModel, Set<Connection> connections) {
+        this.playerModel = playerModel;
         this.player1 = player1;
         this.player2 = player2;
         this.protocol1 = protocol1;
@@ -66,19 +66,22 @@ public class GameRoom implements Runnable {
         if (msgMove == null) {
             return;
         }
+
         log.info(" Recieve msgMove ");
-        User userCurrent;
+        String playerCurrent;
         String nickname = msgMove.getPlayer();
-        String opponentNick;
+        String opponentNickname;
         if (nickname.equals(player1.getNickname())) {
-            userCurrent = player1;
-            opponentNick = player2.getNickname();
+            playerCurrent = nickname;
+            opponentNickname = player2.getNickname();
+            sendMoveOpponent(protocol2, opponentNickname, msgMove);
         } else {
-            userCurrent = player2;
-            opponentNick = player1.getNickname();
+            playerCurrent = nickname;
+            opponentNickname = player1.getNickname();
+            sendMoveOpponent(protocol1, opponentNickname, msgMove);
         }
 
-        backgammonModel.afterDidMove(userCurrent, msgMove.getFirstCheckerMoveFrom(), msgMove.getFirstCheckerMoveInto(),
+        backgammonModel.afterDidMove(playerCurrent, msgMove.getFirstCheckerMoveFrom(), msgMove.getFirstCheckerMoveInto(),
                                         msgMove.getSecondCheckerMoveFrom(), msgMove.getSecondCheckerMoveInto());
 
         if (backgammonModel.isEndGame()) {
@@ -120,11 +123,20 @@ public class GameRoom implements Runnable {
         log.info(" Receive msgMove.");
     }
 
+    public void sendMoveOpponent(Transport protocol, String opponentNickname, MsgMove msgMove) {
+        try {
+            protocol.send(msgMove);
+        } catch (IOException ex) {
+            log.error("IOE when Send MsgMove for [" + opponentNickname + "]", ex);
+            getConnection(protocol).exitThread();
+        }
+    }
+
     public void close() {
         disconnectUser(player1);
         disconnectUser(player2);
         log.info("The Room is closing. ");
-        userModel.setListChanged();
+        playerModel.setListChanged();
         thread.interrupt();
     }
 

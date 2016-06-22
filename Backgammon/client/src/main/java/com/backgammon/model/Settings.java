@@ -26,9 +26,13 @@ public class Settings {
 
     // constants
     public static final int MILLIS_WAIT = 3000;
-    public static final String HOST = "localhost";
-    public static final int PORT = 1024;
-    public static final int SO_TIMEOUT = 10000;
+    public static final String HOST     = "localhost";
+    public static final int PORT        = 1024;
+    public static final int SO_TIMEOUT  = 10000;
+
+    public static final String EXIT = "exit";
+    public static final String ACTION_EXIT  = "exit";
+    public static final String ACTION_LEAVE_GAME = "leave game";
 
     // user
     private static String username = "";
@@ -42,15 +46,35 @@ public class Settings {
     public static final String DBG_ReadFromXML          = "Read settings from XML file...";
     public static final String DBG_WriteToXML           = "Write settings to XML file...";
     public static final String DBG_CreatingEventLoop    = "Creating event loop...";
+    public static final String DBG_CreatingView         = "Creating view...";
     public static final String DBG_StartEventLoop       = "Start event loop...";
     public static final String DBG_NULL_EVENT           = "Dispatching event: event == null";
     public static final String DBG_InvalidPassword      = "Invalid password. Try again.";
     public static final String DBG_InvalidUsername      = "Invalid username. Try again.";
+    public static final String DBG_ExitProgram          = "Exit program...";
+    public static final String DBG_SetChanges           = "Set changes to game model...";
+    public static final String DBG_ShowView             = "Show view...";
+    public static final String DBG_ClosingView          = "Closing view...";
+    public static final String DBG_UpdatingView         = "Updating view...";
+    public static final String DBG_LeavingGame          = "Leaving game...";
+
+
+    // INFO MSG
+    public static final String INF_LeavingGame          = "You are leaving the game";
+    public static final String INF_DialogTitle          = "Registration / Authorization";
+    public static final String INF_Looser               = "You are looser ";
+    public static final String INF_Winner               = "You are winner ";
 
     // ERR MSG
     public static final String ERR_CannotReadSettings   = "Cannot read the settings";
     public static final String ERR_ConnectionRefused    = "Connection refused";
+    public static final String ERR_ConnectionErr        = "Connection error";
     public static final String ERR_ConnectionReset      = "Connection reset";
+    public static final String ERR_SaveSettingsErr      = "Cannot save the settings";
+    public static final String ERR_PlayerRefused        = "The player refused to accept the game";
+
+
+    public static final String ANS_PlayWith             = "Do you want to play with ";
 
     public static void writeSettingsIntoXML() {
 

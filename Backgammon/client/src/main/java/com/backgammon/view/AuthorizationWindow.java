@@ -1,32 +1,32 @@
 package com.backgammon.view;
 
-import com.backgammon.controller.BackgammomBoardController;
+import com.backgammon.controller.BackgammonController;
 import com.backgammon.model.Settings;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AuthorizationWindow extends JFrame {
+public class AuthorizationWindow extends JPanel {
+
+    private final BackgammonController listener;
 
     private final JTextField loginField;
     private final JPasswordField passwordField;
     private final JCheckBox regCheckBox;
+    private JButton okButton;
+    private JDialog dialog;
 
-    private final BackgammomBoardController listener;
+    private boolean enterOk;
 
-    public AuthorizationWindow(final BackgammomBoardController listener) {
-
-        super("Authorization");
+    public AuthorizationWindow(final BackgammonController listener) {
 
         this.listener = listener;
 
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         Box box1 = Box.createHorizontalBox();
         JLabel loginLabel = new JLabel("Login:");
@@ -43,13 +43,14 @@ public class AuthorizationWindow extends JFrame {
         box2.add(passwordField);
 
         Box box3 = Box.createHorizontalBox();
-        JButton ok = new JButton("OK");
-        ok.addMouseListener(new OKMouseL());
-        JButton cancel = new JButton("Cancel");
+        JButton okButton = new JButton("OK");
+        okButton.addActionListener(new OKActoinL());
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(new CancelActionL());
         box3.add(Box.createHorizontalGlue());
-        box3.add(ok);
+        box3.add(okButton);
         box3.add(Box.createHorizontalStrut(12));
-        box3.add(cancel);
+        box3.add(cancelButton);
 
         Box box4 = Box.createHorizontalBox();
         regCheckBox = new JCheckBox("Registration");
@@ -67,46 +68,36 @@ public class AuthorizationWindow extends JFrame {
         mainBox.add(box4);
         mainBox.add(Box.createVerticalStrut(17));
         mainBox.add(box3);
-        setContentPane(mainBox);
-        pack();
-        setResizable(false);
+
+        this.add(mainBox);
 
     }
 
-    private class OKMouseL implements MouseListener {
+    private class OKActoinL implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
 
-        public void mouseClicked(MouseEvent event) {
-            if ( !isCorrectLogin() ) {
-                JOptionPane.showMessageDialog(null,
-                        Settings.DBG_InvalidUsername,
-                        "Error Message",
-                        JOptionPane.ERROR_MESSAGE);
+            if ( ! isCorrectLogin() ) {
+                JOptionPane.showMessageDialog(dialog, Settings.DBG_InvalidUsername, "Error Message", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            if ( !isCorrectPassword() ) {
-                JOptionPane.showMessageDialog(null,
-                        Settings.DBG_InvalidPassword,
-                        "Error Message",
-                        JOptionPane.ERROR_MESSAGE);
+            if ( ! isCorrectPassword() ) {
+                JOptionPane.showMessageDialog(dialog, Settings.DBG_InvalidPassword, "Error Message", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+
+            enterOk = true;
+            Settings.setPassword(getPassword());
+            Settings.setUsername(getLogin());
+            dialog.setVisible(false);
+
         }
-
-        public void mouseEntered(MouseEvent event) {}
-
-        public void mouseExited(MouseEvent event) {}
-
-        public void mousePressed(MouseEvent event) {}
-
-        public void mouseReleased(MouseEvent event) {}
-
     }
 
     private class CancelActionL implements ActionListener {
-        @Override
         public void actionPerformed(ActionEvent e) {
-
+            ActionEvent actionEvent = new ActionEvent(this, 0, Settings.EXIT);
+            listener.actionPerformed(actionEvent);
         }
     }
 
@@ -140,6 +131,49 @@ public class AuthorizationWindow extends JFrame {
 
     public boolean isSelectedRegistration() {
         return regCheckBox.isSelected();
+    }
+
+    public void setDefaultUser() {
+        this.loginField.setText(Settings.getUsername());
+        this.passwordField.setText(Settings.getPassword());
+    }
+
+
+    public boolean showDialog(Component parent, String title) {
+
+        enterOk = false;
+
+        // locate the owner frame
+        Frame owner = null;
+        if (parent instanceof Frame)
+            owner = (Frame) parent;
+        else
+            owner = (Frame)SwingUtilities.getAncestorOfClass(Frame.class, parent);
+
+        // if first time, or if owner has changed, make new dialog
+        if (dialog == null || dialog.getOwner() != owner)
+        {
+            dialog = new JDialog(owner, true);
+            dialog.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    super.windowClosing(e);
+                    ActionEvent actionEvent = new ActionEvent(this, 0, Settings.EXIT);
+                    listener.actionPerformed(actionEvent);
+                }
+            });
+
+            dialog.getContentPane().add(this);
+            dialog.getRootPane().setDefaultButton(okButton);
+            dialog.pack();
+        }
+
+        // set title and show dialog
+        dialog.setTitle(title);
+        dialog.setVisible(true);
+
+        return enterOk;
+
     }
 
 }

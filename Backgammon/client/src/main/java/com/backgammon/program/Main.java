@@ -1,6 +1,6 @@
 package com.backgammon.program;
 
-import com.backgammon.controller.BackgammomBoardController;
+import com.backgammon.controller.BackgammonController;
 import com.backgammon.controller.EventLoop;
 import com.backgammon.model.Settings;
 import org.apache.log4j.Logger;
@@ -23,8 +23,8 @@ public class Main {
         }
 
         try {
-            BackgammomBoardController seaBattleController = new BackgammomBoardController();
-            EventLoop eventLoop = new EventLoop(seaBattleController);
+            BackgammonController backgammomController = new BackgammonController();
+            EventLoop eventLoop = new EventLoop(backgammomController);
             eventLoop.setDaemon(true);
             eventLoop.start();
 

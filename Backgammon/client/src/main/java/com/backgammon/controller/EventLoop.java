@@ -1,9 +1,7 @@
 package com.backgammon.controller;
 
-//import group11.protocol.pack.*;
 import com.backgammon.model.Settings;
-import com.backgammon.protocol.Msg;
-import com.messageParser.MessageParser;
+import lab2.protocol.envelope.*;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -15,16 +13,15 @@ public class EventLoop extends Thread {
 
     static Logger log = Logger.getLogger(EventLoop.class.getName());
 
-    private BackgammomBoardController listener;
+    private BackgammonController listener;
 
-    public EventLoop(BackgammomBoardController listener) {
+    public EventLoop(BackgammonController listener) {
 
         log.debug(Settings.DBG_CreatingEventLoop);
         this.listener = listener;
 
     }
 
-    @Override
     public void run() {
 
         log.debug(Settings.DBG_StartEventLoop);
@@ -33,9 +30,6 @@ public class EventLoop extends Thread {
             try {
                 dispatchEvent(listener.getTransport().receive());
             } catch (IOException e) {
-                BackgammomBoardController.showError(Settings.ERR_ConnectionReset);
-                interrupt();
-            } catch (ClassNotFoundException e) {
                 BackgammomBoardController.showError(Settings.ERR_ConnectionReset);
                 interrupt();
             }
@@ -54,55 +48,50 @@ public class EventLoop extends Thread {
             return;
         }
 
-        if (event.equals("")){
-            return;
-        }
 
-        String operationName = MessageParser.getOperationName(event);
-
-        listener.processOperation(operationName, event);
-
-        /*if (event.getClass().getSimpleName().equals("ListUsers")) {
-            ListUsers str = (ListUsers) event;
-            if (str.users != null) {
-                listener.updateUserSet(str.users);
+        if (event.getClass().getSimpleName().equals("MsgListUsers")) {
+            MsgListUsers msgListUsers = (MsgListUsers) event;
+            if (msgListUsers.getUsers() != null) {
+                listener.updatePlayerSet(msgListUsers.getUsers());
             }
         }
 
-        if (event.getClass().getSimpleName().equals("NickException")) {
-            NickException str = (NickException) event;
-            listener.showError(str.message);
+        if (event.getClass().getSimpleName().equals("MsgNicknameException")) {
+            MsgNicknameException msgNicknameException = (MsgNicknameException) event;
+            listener.showError(msgNicknameException.getMessage());
+
             listener.showAuthorizationWindow();
         }
 
-        if (event.getClass().getSimpleName().equals("FieldToSend")) {
-            FieldToSend fieldToSend = (FieldToSend) event;
-            listener.updateSeaBattleModel(fieldToSend.getField(), fieldToSend.getNick());
+        if (event.getClass().getSimpleName().equals("MsgPlayRequest")) {
+            MsgPlayRequest playRequest = (MsgPlayRequest) event;
+            listener.showConfirm(Settings.ANS_PlayWith + playRequest.getNickname() + "?", playRequest.getNickname());
         }
 
-        if (event.getClass().getSimpleName().equals("PlayRequest")) {
-            PlayRequest playRequest = (PlayRequest) event;
-            listener.showConfirm(Settings.ANS_PlayWith + playRequest.nick + "?", playRequest.nick);
-        }*/
+        if (event.getClass().getSimpleName().equals("MsgMove")) {
+            MsgMove msgMove = (MsgMove) event;
+            listener.updateBackgammonModel(msgMove.getPlayer(), msgMove.getFirstCheckerMoveFrom(), msgMove.getFirstCheckerMoveInto(),
+                    msgMove.getSecondCheckerMoveFrom(), msgMove.getSecondCheckerMoveInto());
+        }
 
-        /*if (event.getClass().getSimpleName().equals("Msg")) {
+        if (event.getClass().getSimpleName().equals("Msg")) {
             Msg msg = (Msg) event;
 
-            if (msg.message.equals("Ok")) {
-                //listener.showAuthorizationWindow();
-            } else if (msg.message.equals("NoBattle")) {
-                //listener.showError(Settings.ERR_UserRefused);
-            } else if (msg.message.equals("Lost")) {
-                //listener.lostAction();
-            } else if (msg.message.equals("Won")) {
-                //listener.wonAction();
+            if (msg.getMessage().equals("Connect")) {
+                listener.showAuthorizationWindow();
+            } else if (msg.getMessage().equals("NoGame")) {
+                listener.showError(Settings.ERR_PlayerRefused);
+            } else if (msg.getMessage().equals("Lost")) {
+                listener.lostAction();
+            } else if (msg.getMessage().equals("Won")) {
+                listener.wonAction();
             } else {
-//                listener.showInfoMessage(msg.message);
-//                listener.closeGameWindow();
-//                listener.showUserList();
+                listener.showInfoMessage(msg.getMessage());
+                listener.closeGameWindow();
+                listener.showPlayerList();
             }
 
-        }*/
+        }
 
     }
 

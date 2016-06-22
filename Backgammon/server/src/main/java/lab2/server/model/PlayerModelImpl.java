@@ -13,11 +13,11 @@ import java.util.*;
 import static lab2.server.model.ParserXmlFile.readFromXML;
 import static lab2.server.model.ParserXmlFile.writeToXML;
 
-public class ModelImpl extends Observable implements Model, Serializable {
+public class PlayerModelImpl extends Observable implements PlayerModel, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = Logger.getLogger(lab2.server.model.ModelImpl.class);
+    private static final Logger log = Logger.getLogger(PlayerModelImpl.class);
 
     private final static String FILE_NAME = "usersList.xml";
 
@@ -26,7 +26,7 @@ public class ModelImpl extends Observable implements Model, Serializable {
     private Map<User, Socket> activeUsers = new HashMap<>();
 
 
-    public ModelImpl() {
+    public PlayerModelImpl() {
         initModel();
     }
 

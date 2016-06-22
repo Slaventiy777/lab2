@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Set;
 
-public interface Model {
+public interface PlayerModel {
     
     void addUser(User user, Socket socket, boolean onlyActiveUser);
 
